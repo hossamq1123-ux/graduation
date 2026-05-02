@@ -104,8 +104,10 @@
     const userImage = new Image();
     let userImageLoaded = false;
 
+    // مسار الصورة الأساسية
     baseImage.src = 'grad-card-bg.jpg'; 
 
+    // معالجة رفع صورة المستخدم
     document.getElementById('imageUpload').onchange = function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -128,25 +130,35 @@
             return;
         }
 
+        // تحسين: التأكد من تحميل خلفية البطاقة قبل الرسم لتجنب التعليق
+        if (!baseImage.complete) {
+            await new Promise((resolve) => {
+                baseImage.onload = resolve;
+                baseImage.onerror = () => Swal.fire('خطأ', 'تعذر تحميل صورة الخلفية، تأكد من اسم الملف', 'error');
+            });
+        }
+
         canvas.width = baseImage.width || 1000; 
         canvas.height = baseImage.height || 1400;
 
+        // رسم الخلفية
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // 1. إضافة صورة الخريج (تم رفع الإحداثيات لتناسب الإطار العلوي)
+        // 1. رسم صورة الخريج إذا تم رفعها
         if (userImageLoaded) {
             drawUserImage();
         }
 
-        // 2. إضافة الاسم في المستطيل العلوي
+        // 2. إضافة الاسم في المستطيل المخصص
         ctx.font = "bold 50px 'BukraFont'";
         ctx.fillStyle = "#0c4a6e"; 
         ctx.textAlign = "center";
         
-        // إحداثي Y يضع الاسم بدقة داخل المستطيل الرمادي العلوي
-        const nameYPosition = canvas.height * 0.39; 
+        // استخدام الإحداثي الدقيق 39.50%
+        const nameYPosition = canvas.height * 0.395; 
         ctx.fillText(name, canvas.width / 2, nameYPosition); 
 
+        // إظهار النتائج مع تأثيرات حركية
         const wrapper = document.getElementById('canvasWrapper');
         wrapper.classList.remove('hidden');
         setTimeout(() => {
@@ -154,13 +166,14 @@
             document.getElementById('downloadBtn').style.display = 'flex';
         }, 100);
 
+        // تأثير الاحتفال
         confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
     }
 
     function drawUserImage() {
-        const size = 260; // الحجم المناسب للدائرة
+        const size = 260; // حجم الصورة الدائرية
         const centerX = canvas.width / 2;
-        const centerY = 240; // الارتفاع المناسب لتوسيط الصورة داخل الإطار الأبيض العلوي
+        const centerY = 240; // الارتفاع لتوسيط الصورة في الإطار العلوي
 
         ctx.save();
         ctx.beginPath();
@@ -168,11 +181,11 @@
         ctx.closePath();
         ctx.clip();
 
-        // توسيط الصورة الشخصية داخل القص الدائري
+        // رسم الصورة داخل القص الدائري
         ctx.drawImage(userImage, centerX - (size / 2), centerY - (size / 2), size, size);
         ctx.restore();
 
-        // إطار ناعم حول الصورة
+        // إطار بسيط حول الصورة الشخصية
         ctx.strokeStyle = "#0c4a6e";
         ctx.lineWidth = 4;
         ctx.stroke();
@@ -180,7 +193,7 @@
 
     function downloadCard() {
         const link = document.createElement('a');
-        link.download = `تخرج_نادي_التمريض_${Date.now()}.png`;
+        link.download = `نادي_التمريض_تخرج_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
