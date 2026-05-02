@@ -21,7 +21,6 @@
             background: #f8fafc;
         }
 
-        /* تغيير الخلفية لألوان تناسب التمريض والعلوم الصحية (أبيض وأزرق طبي) */
         body::before {
             content: "";
             position: fixed;
@@ -59,7 +58,6 @@
 <div class="w-full max-w-2xl m-auto p-6 sm:p-10 relative z-10 text-center main-card rounded-[2.5rem] shadow-2xl">
     
     <div class="flex justify-center mb-6">
-        <!-- تأكد من تغيير مسار الشعار إلى شعار النادي الجديد -->
         <img src="nursing-logo.png" alt="شعار نادي التمريض" class="h-24 w-auto drop-shadow-md">
     </div>
 
@@ -106,10 +104,8 @@
     const userImage = new Image();
     let userImageLoaded = false;
 
-    // 1. الصورة الأساسية (خلفية التخرج)
     baseImage.src = 'grad-card-bg.jpg'; 
 
-    // تحديث نص الرفع عند اختيار صورة
     document.getElementById('imageUpload').onchange = function(e) {
         const file = e.target.files[0];
         if (file) {
@@ -132,26 +128,25 @@
             return;
         }
 
-        // إعدادات الحجم
         canvas.width = baseImage.width || 1000; 
         canvas.height = baseImage.height || 1400;
 
-        // رسم الخلفية
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // 2. إضافة صورة الخريج (إذا تم رفعها)
+        // 1. إضافة صورة الخريج (تم رفع الإحداثيات لتناسب الإطار العلوي)
         if (userImageLoaded) {
             drawUserImage();
         }
 
-        // 3. إضافة النص
-        ctx.font = "bold 60px 'BukraFont'";
-        ctx.fillStyle = "#0c4a6e"; // لون كحلي طبي
+        // 2. إضافة الاسم في المستطيل العلوي
+        ctx.font = "bold 50px 'BukraFont'";
+        ctx.fillStyle = "#0c4a6e"; 
         ctx.textAlign = "center";
-        // مكان الاسم (يعدل حسب تصميم خلفيتك)
-        ctx.fillText(name, canvas.width / 2, canvas.height * 0.85); 
+        
+        // إحداثي Y يضع الاسم بدقة داخل المستطيل الرمادي العلوي
+        const nameYPosition = canvas.height * 0.38; 
+        ctx.fillText(name, canvas.width / 2, nameYPosition); 
 
-        // إظهار النتائج
         const wrapper = document.getElementById('canvasWrapper');
         wrapper.classList.remove('hidden');
         setTimeout(() => {
@@ -163,31 +158,29 @@
     }
 
     function drawUserImage() {
-        // إحداثيات صورة الخريج (يفترض أنها في المنتصف)
-        const size = 300; // حجم الصورة الشخصية
-        const x = (canvas.width / 2) - (size / 2);
-        const y = 300; // الارتفاع من الأعلى
+        const size = 260; // الحجم المناسب للدائرة
+        const centerX = canvas.width / 2;
+        const centerY = 240; // الارتفاع المناسب لتوسيط الصورة داخل الإطار الأبيض العلوي
 
         ctx.save();
-        // رسم دائرة لقص الصورة داخلها (Clip)
         ctx.beginPath();
-        ctx.arc(canvas.width / 2, y + (size/2), size / 2, 0, Math.PI * 2);
+        ctx.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
 
-        // رسم الصورة الشخصية
-        ctx.drawImage(userImage, x, y, size, size);
+        // توسيط الصورة الشخصية داخل القص الدائري
+        ctx.drawImage(userImage, centerX - (size / 2), centerY - (size / 2), size, size);
         ctx.restore();
 
-        // رسم إطار حول الدائرة
+        // إطار ناعم حول الصورة
         ctx.strokeStyle = "#0c4a6e";
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 4;
         ctx.stroke();
     }
 
     function downloadCard() {
         const link = document.createElement('a');
-        link.download = 'تخرج_نادي_التمريض.png';
+        link.download = `تخرج_نادي_التمريض_${Date.now()}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }
