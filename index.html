@@ -35,16 +35,6 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        .upload-area {
-            border: 2px dashed #0c4a6e;
-            transition: all 0.3s ease;
-        }
-
-        .upload-area:hover {
-            background: #f0f9ff;
-            border-color: #0284c7;
-        }
-
         canvas {
             max-width: 100%;
             height: auto;
@@ -68,21 +58,13 @@
         <div class="text-right">
             <label class="block text-[#0c4a6e] font-bold mb-2 mr-2">اسم الخريج/ـة:</label>
             <input type="text" id="nameInput" placeholder="اكتب الاسم هنا..." 
-                   class="w-full px-6 py-4 rounded-2xl text-lg text-center outline-none border-2 border-gray-100 focus:border-[#0c4a6e] transition-all">
-        </div>
-
-        <div class="text-right">
-            <label class="block text-[#0c4a6e] font-bold mb-2 mr-2">صورة الخريج (اختياري):</label>
-            <div class="upload-area relative rounded-2xl p-4 flex flex-col items-center justify-center cursor-pointer">
-                <input type="file" id="imageUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer">
-                <span id="uploadStatus" class="text-gray-500 text-sm">اضغط لرفع الصورة الشخصية</span>
-            </div>
+                   class="w-full px-6 py-4 rounded-2xl text-lg text-center outline-none border-2 border-gray-100 focus:border-[#0c4a6e] transition-all shadow-sm">
         </div>
     </div>
     
     <div class="flex flex-col gap-4">
         <button onclick="generateGraduationCard()" 
-                class="w-full bg-[#0c4a6e] hover:bg-[#075985] text-white font-bold py-5 rounded-2xl shadow-lg transform transition active:scale-95 text-xl">
+                class="w-full bg-[#0c4a6e] hover:bg-[#075985] text-white font-bold py-5 rounded-2xl shadow-lg transform transition active:scale-95 text-xl flex justify-center items-center gap-2">
             إصدار بطاقة التخرج ✨
         </button>
         
@@ -101,26 +83,9 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const baseImage = new Image();
-    const userImage = new Image();
-    let userImageLoaded = false;
 
     // مسار الصورة الأساسية
     baseImage.src = 'grad-card-bg.jpg'; 
-
-    // معالجة رفع صورة المستخدم
-    document.getElementById('imageUpload').onchange = function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                userImage.src = event.target.result;
-                userImage.onload = () => { userImageLoaded = true; };
-                document.getElementById('uploadStatus').innerText = "✅ تم اختيار الصورة";
-                document.getElementById('uploadStatus').classList.add('text-emerald-600');
-            };
-            reader.readAsDataURL(file);
-        }
-    };
 
     async function generateGraduationCard() {
         const name = document.getElementById('nameInput').value.trim();
@@ -130,11 +95,11 @@
             return;
         }
 
-        // تحسين: التأكد من تحميل خلفية البطاقة قبل الرسم لتجنب التعليق
+        // التأكد من تحميل خلفية البطاقة قبل الرسم
         if (!baseImage.complete) {
             await new Promise((resolve) => {
                 baseImage.onload = resolve;
-                baseImage.onerror = () => Swal.fire('خطأ', 'تعذر تحميل صورة الخلفية، تأكد من اسم الملف', 'error');
+                baseImage.onerror = () => Swal.fire('خطأ', 'تعذر تحميل صورة الخلفية', 'error');
             });
         }
 
@@ -144,12 +109,7 @@
         // رسم الخلفية
         ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
 
-        // 1. رسم صورة الخريج إذا تم رفعها
-        if (userImageLoaded) {
-            drawUserImage();
-        }
-
-        // 2. إضافة الاسم في المستطيل المخصص
+        // إضافة الاسم في المستطيل المخصص
         ctx.font = "bold 50px 'BukraFont'";
         ctx.fillStyle = "#0c4a6e"; 
         ctx.textAlign = "center";
@@ -158,7 +118,7 @@
         const nameYPosition = canvas.height * 0.395; 
         ctx.fillText(name, canvas.width / 2, nameYPosition); 
 
-        // إظهار النتائج مع تأثيرات حركية
+        // إظهار النتائج
         const wrapper = document.getElementById('canvasWrapper');
         wrapper.classList.remove('hidden');
         setTimeout(() => {
@@ -168,27 +128,6 @@
 
         // تأثير الاحتفال
         confetti({ particleCount: 150, spread: 100, origin: { y: 0.7 } });
-    }
-
-    function drawUserImage() {
-        const size = 260; // حجم الصورة الدائرية
-        const centerX = canvas.width / 2;
-        const centerY = 240; // الارتفاع لتوسيط الصورة في الإطار العلوي
-
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, size / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.clip();
-
-        // رسم الصورة داخل القص الدائري
-        ctx.drawImage(userImage, centerX - (size / 2), centerY - (size / 2), size, size);
-        ctx.restore();
-
-        // إطار بسيط حول الصورة الشخصية
-        ctx.strokeStyle = "#0c4a6e";
-        ctx.lineWidth = 4;
-        ctx.stroke();
     }
 
     function downloadCard() {
